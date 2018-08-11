@@ -19,7 +19,7 @@ ip = '127.0.0.1'
 
 bChainServersList = []
 ##fillers for testing
-bChainServersList.append("127.0.0.5")
+bChainServersList.append("127.0.0.5")##server će funkcijonirati na portu 9999
 bChainServersList.append("127.0.0.5")
 bChainServersList.append("127.0.0.4")
 bChainServersList.append("127.0.0.2")
@@ -32,13 +32,15 @@ blockChain = [] #list for storing blocks
 
 transactionQueue = [] #transactions which are not in mining proces
 
-def AddBlockToBlockChain(data):#placeholder
-    tmpBlock = Block(data)
-    blockChain.append(tmpBlock)
+# def AddBlockToBlockChain(data):#placeholder
+#     tmpBlock = Block(data)
+#     blockChain.append(tmpBlock)
 
 def CheckReq(data): #helper for handling incomming REQs
     tmp = list(data.split(","))
     if(tmp[0].find("INIT") == 0):
+        return (tmp[0], tmp[1:])
+    if(tmp[0].find("NEW") == 0):
         return (tmp[0], tmp[1:])
     elif(tmp[0].find("TRANS") == 0):
         return (tmp[0], tmp[1:])
@@ -47,10 +49,53 @@ def CheckReq(data): #helper for handling incomming REQs
     else:
         return "WRONG REQ"
 
-def AddTransactionToQueue(data):
-    tmpTrans = Transaction(data) #raw data to Transaction obj
-    ##checkTrans(tmpTrans) chck if there are enough coins
-    transactionQueue.append(tmpTrans)
+# def AddTransactionToQueue(data):
+#     tmpTrans = Transaction(data) #raw data to Transaction obj
+#     ##checkTrans(tmpTrans) chck if there are enough coins
+#     transactionQueue.append(tmpTrans)
+
+
+########################################################################################
+
+def sendIpAddr(host, port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port)) 
+    s.sendall("INIT".encode('ascii'))
+    s.close()
+
+def initMe():
+    host = ""       
+    print(host)                       
+    port = 9999
+    sendIpAddr(ip, port)
+    
+    recSocket = socket.socket(
+        socket.AF_INET, socket.SOCK_STREAM)
+    recSocket.bind(("", 30000))
+    recSocket.listen(5)
+    
+    nesto, adresa = recSocket.accept()
+    b = b''
+    while True:
+        print("usao sam u while petlju\n")
+        tmp = nesto.recv(1024)
+        if not tmp:
+            break
+        b = b + tmp
+
+        print("Doasao sam do kraja while petlje\n")
+    d = json.loads(b.decode('utf-8'))
+    print(d)
+    if "0.0.0.0" not in d:
+        bChainServersList = d
+        print(bChainServersList)
+    else:
+        print("Vasa IP adreasa je vec dodana u BChain")
+    nesto.close()
+    recSocket.close()
+
+
+#################################################################################################
 
 async def SendAllIpAddrToNewNode(addr, loop):
     print("Entering SendAllIpAddrToNewNode\n") ##prints like this are for debuggins purposes
@@ -61,6 +106,18 @@ async def SendAllIpAddrToNewNode(addr, loop):
     await loop.sock_sendall(noviSocket, b)
 
     noviSocket.close()
+    print("zavrsio SendAllIpAddrToNewNode\n")
+
+async def SendNewNodeAddrToAllOther(addr, loop):
+    print("Entering SendAllIpAddrToNewNode\n") ##prints like this are for debuggins purposes
+    for i in bChainServersList:
+        noviSocket = socket(AF_INET, SOCK_STREAM)
+        noviSocket.connect((i, 9999))
+
+        b = json.dumps(addr[0]).encode('utf-8')
+        await loop.sock_sendall(noviSocket, b)
+
+        noviSocket.close()
     print("zavrsio SendAllIpAddrToNewNode\n")
 
 async def SendControlList(addr, loop):#saljemo kada je novi server
@@ -75,23 +132,24 @@ async def SendControlList(addr, loop):#saljemo kada je novi server
     print("zavrsio send control list\n")
     return
 
-async def AddToBChain(addr, loop):
-    print("Add To BChain\n")
+async def AddNewNodeToBChain(addr, loop):
+    print("AddNewNodeToBChain\n")
     for i in bChainServersList:
-        if i == addr[0]: ##ovdje valjda treba biti !=
-            loop.create_task(SendControlList(addr, loop))
+        if i != addr[0]: ##ovdje valjda treba biti !=
+            loop.create_task(SendControlList(addr, loop))##novom članu šaljemo cijeli blockchain
             return
         
     bChainServersList.append(addr[0])
-    loop.create_task(SendAllIpAddrToNewNode(addr, loop))##saljemo novom sve ostale
-    ##posalji novoga svim ostalima#############################
-    print("KRAJ Add to BChain")
+    loop.create_task(SendAllIpAddrToNewNode(addr, loop))##saljemo novom nodeu sve ostale
+    loop.create_tast(SendNewNodeAddrToAllOther(addr, loop)) ##saljemo svim starim nodeovima novog
+    print("KRAJ AddNewNodeToBChain\n")
     return
 
 async def Glavna_funkcija_programa(address, loop):
     print("Glavna_funkcija_programa")
     ##
     ##ovdje bi svi osim prvog prvo trebali skupit cijeli ledger
+    ##initMe() ##ve req all ip addr and the whole ledgger
     ##
     sock = socket(AF_INET, SOCK_STREAM)
     sock.bind(address)
@@ -114,7 +172,10 @@ async def request_handler(client, addr, loop):
     print("primio sam {}", format(data))
 
     if REQ == "INIT":
-        loop.create_task(AddToBChain(addr, loop))
+        loop.create_task(AddNewNodeToBChain(addr, loop))
+    
+    elif REQ == "NEW":
+        pass
 
     elif REQ == "TRANS":
         ##ako je nasa transakcija sljemo je svima ostalima
@@ -127,8 +188,8 @@ async def request_handler(client, addr, loop):
         ##primamo block
         ##ako je nas blok onda ga prosljedjujemo svima ostalima
         ##ako je tudji dodajemo ga u blockChain
-        AddBlockToBlockChain(data)
-        print("Jedi govna bloče")
+        ##AddBlockToBlockChain(data)
+        ##print("Jedi govna bloče")
         pass
     else:
         pass
