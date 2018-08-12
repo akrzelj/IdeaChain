@@ -19,10 +19,65 @@ class transaction:
         else:
             return False
 
-def mine():
-    pass
 
-def sendBlock(data):
+class Block:
+    def __init__(self, transactions, hashPrevBlock):
+        self.transactions = transactions
+        self.hashPrevBlock = hashPrevBlock
+        self.nonce = None
+miningCandidates = []
+hashPrevBlock = None
+
+
+
+def addToMiningCandidates(data):
+    miningCandidates.append(data)
+    
+
+def mine(transactions, prevHash):
+    import hashlib
+    import time
+    import random
+
+
+    difficultieLevel = 5
+    targetString = "00000"
+
+
+    flag = 1
+    nonce = random.randrange(0, 500000, 2)
+    timeStart = time.time()
+
+    while(flag):
+        if(True):
+            m = hashlib.new('sha256')
+            m.update((noviBlock).encode("utf-8"))##prvo bi trebali updateat sa tijelom blocka
+            m.update((hashPrevBlock).encode("utf-8"))
+            m.update((str(nonce)).encode("utf-8"))##update sa nonceom
+            print("di pusas")
+            
+            var = m.hexdigest()
+            
+            hashPartForChacking = var[:difficultieLevel]
+            print(hashPartForChacking)
+            
+            if(hashPartForChacking == targetString):##hit done
+                flag = 0
+                #zapakiraj nonce u header blocka
+                noviBlock.nonce = nonce
+                
+                sendBlockToServer(noviBlock)
+                sys.exit("Block is mined... Program is terminating....") ##ugasimo program kad smo izmajnali
+                
+            else:                                   ##no hit, continue
+                guessNumber = guessNumber + 1
+                pass
+            
+            del m
+        nonce = nonce + 1
+
+
+def sendBlockToServer(data):
     # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -45,9 +100,9 @@ def sendBlock(data):
 
 
 def recTransaction():
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = ""
-port = 41111
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    host = ""
+    port = 41111
 
 
     # Bind the socket to the port
@@ -65,7 +120,6 @@ port = 41111
         try:
             print('connection from', client_address)
 
-            # Receive the data in small chunks and retransmit it
             while True:
                 data = connection.recv(1024)
                 data = pickle.loads(data)
@@ -73,8 +127,15 @@ port = 41111
                 break
             if(data.find("end") == True):
                 break
+            elif(data.find("hash") == True):
+                data = data.split(",")
+                data = data[1]
+                hashPrevBlock = data
+                break
+                
             else:
-                #addToMiningCandidates(data)
+                addToMiningCandidates(data)
+                pass
             
 
         finally:
@@ -83,7 +144,10 @@ port = 41111
         if(data.find("end") == True):
                 break
 
-recTransactions()
-#mine()
+#recTransactions()
 
-sendBlock(block)
+
+noviBlock = Block(miningCandidates, hashPrevBlock)
+print(noviBlock.hashPrevBlock)
+
+#mine()

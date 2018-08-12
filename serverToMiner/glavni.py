@@ -18,6 +18,20 @@ class transaction:
             return True
         else:
             return False
+
+class BlockBody:
+    def __init__(self, transactions, hashPrevBlock):
+        self.transactions = transactions
+        self.hashPrev = hashPrev
+
+class BlockHeader:
+    def __init__(self):
+        self.nonce = None
+
+class Block(BlockBody,BlockHeader):
+    def __init__(self, transactions, hashPrevBlock):
+        BlockBody.__init__(self, transactions, hashPrevBlock)
+        BlockHeader.__init__()
     
 
 ideja = transaction("ante", "Zivot je kratak pojedi batak")

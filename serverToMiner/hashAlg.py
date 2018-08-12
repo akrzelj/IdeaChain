@@ -1,29 +1,47 @@
 import hashlib
+import time
 import random
 
-flag = 1
-nonce = random.randrange(0, 500000, 2)
-while(flag):
-    if(True):
+difficultieLevel = 6
+targetString = "000000"
 
-        m = hashlib.new('sha256')#.sha256()
-        m.update(b"Nobody inspects")
-        m.update(b" the spammish repetition")
-        print(type(b"jajajaj"))
-        m.update((str(nonce)).encode("utf-8"))
-        
-        var = m.hexdigest()
-        print(var)
-        
+for i in range(1):##we will measure 5 difficultie levels
+    nazivFajla = "UKUPNmjerenjaVreman" + str(difficultieLevel) + ".txt"
+    f = open(nazivFajla, "w")
 
-        
-        provjera = var[:4]
-        print("provjera" + provjera)
-        if(provjera == "0000"):
-            flag = 0
-        print("provjera " + provjera)
-        print(type(provjera))
-        del m
+    for j in range(5):##we mine 5 times every difficultie level
+        ##f.write("ulaz u drugi for\n")
+        flag = 1
+        nonce = random.randrange(0, 500000, 2)
+        timeStart = time.time()
+        guessNumber = 0
+        while(flag):
+            if(True):
+                m = hashlib.new('sha256')
+                m.update(b"kreator nove ideje")
+                m.update(b" njegova velika mudrost")
+                m.update((str(nonce)).encode("utf-8"))
+                print("di pusas")
+                
+                var = m.hexdigest()
+                
+                hashPartForChacking = var[:difficultieLevel]
+                print(hashPartForChacking)
+                
+                if(hashPartForChacking == targetString):##hit done
+                    flag = 0
+                    timeElapsed = time.time() - timeStart
+                    infoString = "Mining of block with difficultie level: " + str(difficultieLevel) + " took " + str(timeElapsed) + " seconds and " + str(guessNumber) + " of repeation.\n"
+                    f.write(infoString)
+                    
+                else:                                   ##no hit, continue
+                    guessNumber = guessNumber + 1
+                    pass
+                
+                del m
+            nonce = nonce + 1
+   
+    difficultieLevel = difficultieLevel + 1
+    targetString = targetString + "0"
 
-    nonce = nonce + 1
-
+    f.close()
