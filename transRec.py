@@ -5,7 +5,7 @@ import socket
 import pickle
 import sys
 
-class transaction:
+class Transaction:
     def __init__(self, creator, idea):
         self.creator = creator
         self.idea = idea
@@ -13,11 +13,13 @@ class transaction:
     def __repr__(self):
         return str("Ideja: " + self.idea + ", autor: " + self.creator + ".\n")
 
-    def find(self, someString):
+    def findEnd(self):
         if(self.creator == "end"):
             return True
         else:
             return False
+    def dataType(self):
+        return "transaction"
 
 
 class Block:
@@ -25,8 +27,23 @@ class Block:
         self.transactions = transactions
         self.hashPrevBlock = hashPrevBlock
         self.nonce = None
+    def dataType(self):
+        return "block"
+    def findEnd(self):
+        if(self.transactions.creator == "end"):
+            return True
+        else:
+            return False
 
 transactionQueue= []
+blockChain = []
+
+
+
+def AddToBlockChain(data):
+    blockChain.append(data)
+    
+    
 
 def AddToTransactionQueue(data):
      transactionQueue.append(data)
@@ -55,20 +72,29 @@ def RecTransaction():
 
             while True:
                 data = connection.recv(1024)
+                print("prvo")
+                print(type(data))
                 data = pickle.loads(data)
+                print("drugo")
+                print(type(data))
                 print('received {!r}'.format(data))
                 break
-            if(data.find("end") == True):
+            if(data.findEnd() == True):
                 break                
             else:
-                AddToTransactionQueue(data)
-                pass          
+                if(data.dataType() == "transaction"):
+                    AddToTransactionQueue(data)
+                elif(data.dataType() == "block"):
+                    AddToBlockChain(data)
+                else:
+                    pass          
 
         finally:
             # Clean up the connection
             connection.close()
-        if(data.find("end") == True):
+        if(data.findEnd() == True):
                 break
 
-#recTransaction()
+RecTransaction()
+
 

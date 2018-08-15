@@ -3,7 +3,8 @@ import pickle
 
 bChainServersList = []
 ##fillers for testing
-bChainServersList.append("127.0.0.5")##server će funkcijonirati na portu 9999
+##izmjena blockova i transakcija ide na portu 11111
+bChainServersList.append("127.0.0.5")
 bChainServersList.append("127.0.0.5")
 bChainServersList.append("127.0.0.4")
 bChainServersList.append("127.0.0.2")
@@ -11,7 +12,7 @@ bChainServersList.append("127.0.0.3")
 
 
 
-class transaction:
+class Transaction:
     def __init__(self, creator, idea):
         self.creator = creator
         self.idea = idea
@@ -19,65 +20,96 @@ class transaction:
     def __repr__(self):
         return str("Ideja: " + self.idea + ", autor: " + self.creator + ".\n")
 
-    def find(self, someString):
+    def findEnd(self):
         if(self.creator == "end"):
             return True
         else:
             return False
+    def dataType(self):
+        return "transaction"
 
-class BlockBody:
+
+class Block:
     def __init__(self, transactions, hashPrevBlock):
         self.transactions = transactions
-        self.hashPrev = hashPrev
-
-class BlockHeader:
-    def __init__(self):
+        self.hashPrevBlock = hashPrevBlock
         self.nonce = None
-
-class Block(BlockBody,BlockHeader):
-    def __init__(self, transactions, hashPrevBlock):
-        BlockBody.__init__(self, transactions, hashPrevBlock)
-        BlockHeader.__init__()
+    def dataType(self):
+        return "block"
+    def findEnd(self):
+        if(self.transactions.creator == "end"):
+            return True
+        else:
+            return False
     
 
-ideja = transaction("ante", "Zivot je kratak pojedi batak")
-ideja2 = transaction("ivan", "placi, placi.. manje ces pisati")
+ideja = Transaction("ante", "Zivot je kratak pojedi batak")
+ideja2 = Transaction("ivan", "placi, placi.. manje ces pisati")
 
 transactionQueue = [ideja, ideja2]
 print(transactionQueue)
+blok = Block(ideja, 33333)
+
+def SendDataToOneNode(data, ip):
+# Create a TCP/IP socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Connect the socket to the port where the server is listening
+    server_address = (ip, 11111)
+    print('connecting to {} port {}'.format(*server_address))
+    sock.connect(server_address)
+
+    try:
+
+        # Send data
+        message = pickle.dumps(data)#.encode('utf-8')
+        print('sending {!r}'.format(message))
+        sock.sendall(message)
 
 
+    finally:
+        print('closing socket')
+        sock.close()
 
-def SendSingleTransactionToAllNodes(data):
-    for i in bChainServerList:
-    # Create a TCP/IP socket
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def SendDataListToOneNode(data, ip):
+    for i in data:
+        SendDataToOneNode(i, ip)
 
-        # Connect the socket to the port where the server is listening
-        server_address = (i, 11111)
-        print('connecting to {} port {}'.format(*server_address))
-        sock.connect(server_address)
+def SendDataToOneNodeWithEND(data, ip):
+    SendDataToOneNode(data, ip)
+    end = transaction("end", "end")
+    SendDataToOneNode(end, ip)
 
-        try:
+def SendDataListToOneNodeWithEND(data, ip):
+    SendDataListToOneNode(data, ip)
+    end = transaction("end", "end")
+    SendDataToOneNode(end, ip)
 
-            # Send data
-            message = pickle.dumps(data)#.encode('utf-8')
-            print('sending {!r}'.format(message))
-            sock.sendall(message)
-
-
-        finally:
-            print('closing socket')
-            sock.close()
+    
+def SendDataToAllNodes(data):
+    for ip in bChainServerList:
+        SendDataToOneNode(data, ip)
 
 
-def SendSingleTransactionToAllNodesWithEND(data):
-    SendSingleTransactionToAllNodes(data)
+def SendDataToAllNodesWithEND(data):
+    SendDataToAllNodes(data)
     end = transaction("end", "end")
     SendSingleTransactionToAllNodes(end)
 
-def SendAllTransactionsToAllNodesWithEND(transactionQueue):
-    SendSingleTransactionToAllNodes(transactionQueue)
+def SendDataListToAllNodes(data):
+    for ip in bChainServerList:
+        SendDataToOneNode(data, ip)
+
+
+def SendDataListToAllNodesWithEND(data):
+    SendDataListToAllNodes(data)
     end = transaction("end", "end")
     SendSingleTransactionToAllNodes(end)
+
+
+
+
+SendDataListToOneNode(transactionQueue, "")
+SendDataToOneNode(ideja, "")
+SendDataToOneNode(blok, "")
 
