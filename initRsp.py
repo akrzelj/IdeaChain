@@ -1,4 +1,4 @@
-import socket
+from socket import *
 import pickle
 
 bChainServersList = []
@@ -51,11 +51,12 @@ print(transactionQueue)
 blok = Block(ideja, 33333)
 
 def SendDataToOneNode(data, ip):
-# Create a TCP/IP socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print("#########SendDataToOneNode")
+    print("# Create a TCP/IP socket")
+    sock = socket(AF_INET, SOCK_STREAM)
 
-    # Connect the socket to the port where the server is listening
-    server_address = (ip, 11111)
+    print("# Connect the socket to the port where the server is listening")
+    server_address = (ip, 9990)
     print('connecting to {} port {}'.format(*server_address))
     sock.connect(server_address)
 
@@ -72,14 +73,15 @@ def SendDataToOneNode(data, ip):
         sock.close()
 
 def SendDataListToOneNode(data, ip):
+    print("#########SendDataListToOneNode")
     for i in data:
         SendDataToOneNode(i, ip)
-
 
     
 def SendDataToAllNodes(data):
     for ip in bChainServerList:
         SendDataToOneNode(data, ip)
+
 
 
 def SendDataListToAllNodes(data):
@@ -88,8 +90,13 @@ def SendDataListToAllNodes(data):
 
 
 
-SendDataListToOneNode(transactionQueue, "")
-SendDataToOneNode(ideja, "")
-SendDataToOneNode(blok, "")
-SendDataToOneNode("endThisSession", "")
+sock = socket(AF_INET, SOCK_STREAM)
+sock.bind(('',9999))
+sock.listen(1)
 
+client, address = sock.accept()
+print(client)
+print(address)
+
+SendDataListToOneNodeWithEND(bChainServersList, address[0])
+SendDataToOneNode("endThisSession", address[0])

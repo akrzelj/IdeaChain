@@ -35,8 +35,11 @@ class Block:
         else:
             return False
 
+
+
 transactionQueue= []
 blockChain = []
+bChainServersList = ["127.0.0.5", "ydsds"]
 
 
 
@@ -52,8 +55,7 @@ def AddToTransactionQueue(data):
 def RecTransaction():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = ""
-    port = 11111
-
+    port = 9990
 
     # Bind the socket to the port
     server_address = (host, port)
@@ -78,17 +80,20 @@ def RecTransaction():
                 print("drugo")
                 print(type(data))
                 print('received {!r}'.format(data))
+                print(type(data) == type("string"))
                 break
-           
-        
             if(data == "endThisSession"):
                 pass
-            elif(data.dataType() == "transaction"):
-                AddToTransactionQueue(data)
-            elif(data.dataType() == "block"):
-                AddToBlockChain(data)
+            elif(type(data) == type("string")):
+                print(data)
+                bChainServersList.append(data)
             else:
-                pass          
+                if(data.dataType() == "transaction"):
+                    AddToTransactionQueue(data)
+                elif(data.dataType() == "block"):
+                    AddToBlockChain(data)
+                else:
+                    pass          
 
         finally:
             # Clean up the connection
@@ -97,6 +102,25 @@ def RecTransaction():
                 break
 
 
-RecTransaction()
 
+
+
+def InitMe():
+    host = ""       
+    print(host)                       
+    port = 9999
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port)) 
+    s.sendall("INIT".encode('ascii'))
+    s.close()
+    RecTransaction()
+print(bChainServersList)
+print(blockChain)
+print(transactionQueue)
+
+InitMe()
+
+print(bChainServersList)
+print(blockChain)
+print(transactionQueue)
 

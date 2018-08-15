@@ -175,6 +175,8 @@ async def request_handler(client, addr, loop):
         loop.create_task(AddNewNodeToBChain(addr, loop))
     
     elif REQ == "NEW":
+        #dosao je novi član u p2p mrežu, dodamo ga na popis ip addr
+        #ovo je scenarij kada drugi node inicijalizira novi node a nas samo obavjesti da je novi nod usao u mrežu
         pass
 
     elif REQ == "TRANS":
@@ -187,7 +189,7 @@ async def request_handler(client, addr, loop):
     elif REQ == "BLOCK":
         ##primamo block
         ##ako je nas blok onda ga prosljedjujemo svima ostalima
-        ##ako je tudji dodajemo ga u blockChain
+        ##ako je tudji dodajemo ga u blockChain i zaustavljamo naše trenutno majnanje
         ##AddBlockToBlockChain(data)
         ##print("Jedi govna bloče")
         pass
