@@ -70,5 +70,5 @@ def RecTransaction():
         if(data.find("end") == True):
                 break
 
-recTransaction()
+#recTransaction()
 
