@@ -47,6 +47,7 @@ transactionQueue = [ideja, ideja2]
 print(transactionQueue)
 
 
+
 def SendSingleTransactionToAllNodes(data):
     for i in bChainServerList:
     # Create a TCP/IP socket
@@ -69,15 +70,14 @@ def SendSingleTransactionToAllNodes(data):
             print('closing socket')
             sock.close()
 
+
 def SendSingleTransactionToAllNodesWithEND(data):
     SendSingleTransactionToAllNodes(data)
     end = transaction("end", "end")
     SendSingleTransactionToAllNodes(end)
 
 def SendAllTransactionsToAllNodesWithEND(transactionQueue):
-    for i in transactionQueue:
-        print(i)
-        SendSingleTransactionsToAllNodes(i)
+    SendSingleTransactionToAllNodes(transactionQueue)
     end = transaction("end", "end")
     SendSingleTransactionToAllNodes(end)
 
