@@ -89,14 +89,18 @@ def SendDataListToAllNodes(data):
         SendDataToOneNode(data, ip)
 
 
+def initNode():
+    sock = socket(AF_INET, SOCK_STREAM)
+    sock.bind(('',9999))
+    sock.listen(1)
 
-sock = socket(AF_INET, SOCK_STREAM)
-sock.bind(('',9999))
-sock.listen(1)
+    client, address = sock.accept()
+    print(client)
+    print(address)
 
-client, address = sock.accept()
-print(client)
-print(address)
+    SendDataListToOneNode(bChainServersList, address[0])
+    SendDataListToOneNode(transactionQueue, address[0])
+    SendDataToOneNode(blok, address[0])
+    SendDataToOneNode("endThisSession", address[0])
 
-SendDataListToOneNodeWithEND(bChainServersList, address[0])
-SendDataToOneNode("endThisSession", address[0])
+initNode()

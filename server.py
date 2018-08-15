@@ -3,27 +3,55 @@ from socket import *
 import asyncio
 import json
 import pickle
-
-class Block:
-    def __init__(self, number):
-        self.number = number #placeholder for the real imp
+import time
 
 
 class Transaction:
-    def __init__(self, data):
-        self.sender = data[0]
-        self.recsiever = data[1]
-        self.amount = int(data[2])
+    def __init__(self, creator, idea):
+        self.creator = creator
+        self.idea = idea
+
+    def __repr__(self):
+        return str("Ideja: " + self.idea + ", autor: " + self.creator + ".\n")
+
+    def findEnd(self):
+        if(self.creator == "end"):
+            return True
+        else:
+            return False
+    def dataType(self):
+        return "transaction"
+
+
+class Block:
+    def __init__(self, transactions, hashPrevBlock):
+        self.transactions = transactions
+        self.hashPrevBlock = hashPrevBlock
+        self.nonce = None
+    def dataType(self):
+        return "block"
+    def findEnd(self):
+        if(self.transactions.creator == "end"):
+            return True
+        else:
+            return False
 
 ip = '127.0.0.1'
+
+def PingServer(state, ip):
+    host = ip
+    print(host)                       
+    port = 9999
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port)) 
+    s.sendall(state.encode('ascii'))
+    s.close()
+    time.sleep(5)
 
 bChainServersList = []
 ##fillers for testing
 bChainServersList.append("127.0.0.5")##server će funkcijonirati na portu 9999
-bChainServersList.append("127.0.0.5")
-bChainServersList.append("127.0.0.4")
-bChainServersList.append("127.0.0.2")
-bChainServersList.append("127.0.0.3")
+
 
 ##test helper
 controlList = ["0.0.0.0"]
@@ -53,108 +81,239 @@ def CheckReq(data): #helper for handling incomming REQs
 #     tmpTrans = Transaction(data) #raw data to Transaction obj
 #     ##checkTrans(tmpTrans) chck if there are enough coins
 #     transactionQueue.append(tmpTrans)
+#######################################################################################
+##trans rec
+def AddToBlockChain(data):
+    blockChain.append(data)
+    
+    
+
+def AddToTransactionQueue(data):
+     transactionQueue.append(data)
+
+def SendDataToOneNode(data, ip):
+# Create a TCP/IP socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Connect the socket to the port where the server is listening
+    server_address = (ip, 11111)
+    print('connecting to {} port {}'.format(*server_address))
+    sock.connect(server_address)
+
+    try:
+
+        # Send data
+        
+        message = pickle.dumps(data)#.encode('utf-8')
+        print('sending {!r}'.format(message))
+        sock.sendall(message)
+
+
+    finally:
+        print('closing socket')
+        sock.close()
+
+
+def RecTransaction():
+    sock = socket(AF_INET, SOCK_STREAM)
+    host = ""
+    port = 11111
+
+
+    # Bind the socket to the port
+    server_address = (host, port)
+    print('starting up on {} port {}'.format(*server_address))
+    sock.bind(server_address)
+
+    # Listen for incoming connections
+    sock.listen(1)
+
+    while True:
+        # Wait for a connection
+        print('waiting for a connection')
+        connection, client_address = sock.accept()
+        try:
+            print('connection from', client_address)
+
+            while True:
+                data = connection.recv(1024)
+                print("prvo")
+                print(type(data))
+                data = pickle.loads(data)
+                print("drugo")
+                print(type(data))
+                print('received {!r}'.format(data))
+                break
+           
+        
+            if(data == "endThisSession"):
+                pass
+            elif(data.dataType() == "transaction"):
+
+                if(client_address[0] == '127.0.0.1'):
+                    print("transakcija je moja")
+                    AddToTransactionQueue(data)
+                    for i in bChainServersList:
+                        PingServer("TRANS", i)
+                        SendDataToOneNode(data, i)
+                        SendDataToOneNode("endThisSession", i)
+                else:
+                    print("transakcija nije moja")
+                    AddToTransactionQueue(data)
+            elif(data.dataType() == "block"):
+                if(client_address[0] == '127.0.0.1'):
+                    print("block je moj")
+                    AddToBlockChain(data)
+                    ##posalji svima ostalima
+                    for i in bChainServersList:
+                        PingServer("BLOCK", i)
+                        SendDataToOneNode(data, i)
+                        SendDataToOneNode("endThisSession", i)
+                    for i in 
+                else:
+                    print("block nije moj")
+                    AddToBlockChain(data)
+            else:
+                pass          
+
+        finally:
+            # Clean up the connection
+            connection.close()
+            if(data == "endThisSession"):
+                break
 
 
 ########################################################################################
 
-def sendIpAddr(host, port):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((host, port)) 
-    s.sendall("INIT".encode('ascii'))
-    s.close()
+def InitRecTransaction():
+    sock = socket(AF_INET, SOCK_STREAM)
+    host = ""
+    port = 9990
 
-def initMe():
+    # Bind the socket to the port
+    server_address = (host, port)
+    print('starting up on {} port {}'.format(*server_address))
+    sock.bind(server_address)
+
+    # Listen for incoming connections
+    sock.listen(1)
+
+    while True:
+        # Wait for a connection
+        print('waiting for a connection')
+        connection, client_address = sock.accept()
+        try:
+            print('connection from', client_address)
+
+            while True:
+                data = connection.recv(1024)
+                print("prvo")
+                print(type(data))
+                data = pickle.loads(data)
+                print("drugo")
+                print(type(data))
+                print('received {!r}'.format(data))
+                print(type(data) == type("string"))
+                break
+            if(data == "endThisSession"):
+                pass
+            elif(type(data) == type("string")):
+                print(data)
+                bChainServersList.append(data)
+            else:
+                if(data.dataType() == "transaction"):
+                    AddToTransactionQueue(data)
+                elif(data.dataType() == "block"):
+                    AddToBlockChain(data)
+                else:
+                    pass          
+
+        finally:
+            # Clean up the connection
+            connection.close()
+            if(data == "endThisSession"):
+                break
+
+
+def InitMe():
     host = ""       
     print(host)                       
     port = 9999
-    sendIpAddr(ip, port)
-    
-    recSocket = socket.socket(
-        socket.AF_INET, socket.SOCK_STREAM)
-    recSocket.bind(("", 30000))
-    recSocket.listen(5)
-    
-    nesto, adresa = recSocket.accept()
-    b = b''
-    while True:
-        print("usao sam u while petlju\n")
-        tmp = nesto.recv(1024)
-        if not tmp:
-            break
-        b = b + tmp
-
-        print("Doasao sam do kraja while petlje\n")
-    d = json.loads(b.decode('utf-8'))
-    print(d)
-    if "0.0.0.0" not in d:
-        bChainServersList = d
-        print(bChainServersList)
-    else:
-        print("Vasa IP adreasa je vec dodana u BChain")
-    nesto.close()
-    recSocket.close()
+    s = socket(AF_INET, SOCK_STREAM)
+    s.connect((host, port)) 
+    s.sendall("INIT".encode('ascii'))
+    s.close()
+    InitRecTransaction()
 
 
 #################################################################################################
 
-async def SendAllIpAddrToNewNode(addr, loop):
-    print("Entering SendAllIpAddrToNewNode\n") ##prints like this are for debuggins purposes
-    noviSocket = socket(AF_INET, SOCK_STREAM)
-    noviSocket.connect((addr[0], 30000))
+async def SendDataToOneNode(data, ip, loop):
+    print("#########SendDataToOneNode")
+    print("# Create a TCP/IP socket")
+    sock = socket(AF_INET, SOCK_STREAM)
 
-    b = json.dumps(bChainServersList).encode('utf-8')
-    await loop.sock_sendall(noviSocket, b)
+    print("# Connect the socket to the port where the server is listening")
+    server_address = (ip, 9990)
+    print('connecting to {} port {}'.format(*server_address))
+    sock.connect(server_address)
 
-    noviSocket.close()
-    print("zavrsio SendAllIpAddrToNewNode\n")
+    try:
 
-async def SendNewNodeAddrToAllOther(addr, loop):
-    print("Entering SendAllIpAddrToNewNode\n") ##prints like this are for debuggins purposes
+        # Send data
+        message = pickle.dumps(data)#.encode('utf-8')
+        print('sending {!r}'.format(message))
+        await loop.sock_sendall(sock, message)
+
+
+    finally:
+        print('closing socket')
+        sock.close()
+
+async def SendDataListToOneNode(blockChain, ip, loop):
+    print("#########SendDataListToOneNode")
+    for i in data:
+        await SendDataToOneNode(i, ip, loop)
+
+async def SendDataToAllNodes(data, loop):
+    print("######SendDataToAllNodes")
+    for ip in bChainServersList:
+        await SendDataToOneNode(data, ip, loop)
+
+async def SendNewIpToAllNodes(data, loop):
     for i in bChainServersList:
-        noviSocket = socket(AF_INET, SOCK_STREAM)
-        noviSocket.connect((i, 9999))
+        if(i != ip):
+            SendDataToAllNodes(data, loop)
 
-        b = json.dumps(addr[0]).encode('utf-8')
-        await loop.sock_sendall(noviSocket, b)
-
-        noviSocket.close()
-    print("zavrsio SendAllIpAddrToNewNode\n")
-
-async def SendControlList(addr, loop):#saljemo kada je novi server
-    print("Send Control List\n")   #vec inicijaliziran
-    noviSocket = socket(AF_INET, SOCK_STREAM)
-    noviSocket.connect((addr[0], 30000))
-
-    b = json.dumps(controlList).encode('utf-8')##formatiramo podatke koje saljemo
-    await loop.sock_sendall(noviSocket, b)##posaljemo mu sve podatke
-
-    noviSocket.close()
-    print("zavrsio send control list\n")
-    return
-
-async def AddNewNodeToBChain(addr, loop):
+async def AddNewNodeToBChain(addr, loop):##
     print("AddNewNodeToBChain\n")
-    for i in bChainServersList:
-        if i != addr[0]: ##ovdje valjda treba biti !=
-            loop.create_task(SendControlList(addr, loop))##novom članu šaljemo cijeli blockchain
-            return
-        
-    bChainServersList.append(addr[0])
-    loop.create_task(SendAllIpAddrToNewNode(addr, loop))##saljemo novom nodeu sve ostale
-    loop.create_tast(SendNewNodeAddrToAllOther(addr, loop)) ##saljemo svim starim nodeovima novog
+    if(addr[0] not in bChainServersList):
+        loop.create_task(SendDataListToOneNode(blockChain, addr[0], loop))##novom članu šaljemo cijeli blockchain
+        loop.create_task(SendDataListToOneNode(transactionQueue, addr[0], loop))
+        loop.create_task(SendDataListToOneNode(bChainServersList, addr[0], loop))##saljemo novom nodeu sve ostale
+        loop.create_task(SendDataToAllNodes("NEW,"+addr[0], loop)) ##saljemo svim starim nodeovima novog
+        bChainServersList.append(addr[0])
+    loop.create_task(SendDataToOneNode("endThisSession",addr[0], loop))
     print("KRAJ AddNewNodeToBChain\n")
     return
 
 async def Glavna_funkcija_programa(address, loop):
     print("Glavna_funkcija_programa")
+    print(bChainServersList)
+    print(blockChain)
+    print(transactionQueue)
     ##
     ##ovdje bi svi osim prvog prvo trebali skupit cijeli ledger
-    ##initMe() ##ve req all ip addr and the whole ledgger
+    InitMe() ##ve req all ip addr and the whole ledgger
     ##
     sock = socket(AF_INET, SOCK_STREAM)
     sock.bind(address)
     sock.listen(1)
     sock.setblocking(False)
+    
+    print(bChainServersList)
+    print(blockChain)
+    print(transactionQueue)
     while True:
         print("Ulaz u beskonacnu petlju")
         client, addr = await loop.sock_accept(sock)
@@ -175,23 +334,20 @@ async def request_handler(client, addr, loop):
         loop.create_task(AddNewNodeToBChain(addr, loop))
     
     elif REQ == "NEW":
+        bChainServersList.append(data)
         #dosao je novi član u p2p mrežu, dodamo ga na popis ip addr
         #ovo je scenarij kada drugi node inicijalizira novi node a nas samo obavjesti da je novi nod usao u mrežu
         pass
 
     elif REQ == "TRANS":
-        ##ako je nasa transakcija sljemo je svima ostalima
-        ##posaljiTransakcijuSvimaOstalima()
-        ##ako je tudja
-        ##AddTransactionToQueue(data)
-        pass
+        print("#########usao sam u TRANS")
+        RecTransaction()
+
 
     elif REQ == "BLOCK":
-        ##primamo block
-        ##ako je nas blok onda ga prosljedjujemo svima ostalima
-        ##ako je tudji dodajemo ga u blockChain i zaustavljamo naše trenutno majnanje
-        ##AddBlockToBlockChain(data)
-        ##print("Jedi govna bloče")
+        RecTransaction()
+        ##kreniMajnatNovi()
+        
         pass
     else:
         pass
@@ -200,7 +356,6 @@ async def request_handler(client, addr, loop):
 
 def RecsieverMainFunction():
     loop = asyncio.get_event_loop()
-    loop2 = asyncio.get_event_loop()
     
     server = loop.run_until_complete(Glavna_funkcija_programa(('', 9999), loop))
     

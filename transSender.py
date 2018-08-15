@@ -1,5 +1,6 @@
 import socket
 import pickle
+import time
 
 bChainServersList = []
 ##fillers for testing
@@ -43,7 +44,7 @@ class Block:
             return False
     
 
-ideja = Transaction("ante", "Zivot je kratak pojedi batak")
+ideja = Transaction("ante", "KOD NAS SVI SE ZOVU ANTE")
 ideja2 = Transaction("ivan", "placi, placi.. manje ces pisati")
 
 transactionQueue = [ideja, ideja2]
@@ -62,6 +63,7 @@ def SendDataToOneNode(data, ip):
     try:
 
         # Send data
+        
         message = pickle.dumps(data)#.encode('utf-8')
         print('sending {!r}'.format(message))
         sock.sendall(message)
@@ -87,9 +89,21 @@ def SendDataListToAllNodes(data):
         SendDataToOneNode(data, ip)
 
 
+def PingServer(state):
+    host = ""
+    print(host)                       
+    port = 9999
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port)) 
+    s.sendall(state.encode('ascii'))
+    s.close()
+    time.sleep(5)
+
+
+PingServer("TRANS")
 
 SendDataListToOneNode(transactionQueue, "")
-SendDataToOneNode(ideja, "")
-SendDataToOneNode(blok, "")
+
 SendDataToOneNode("endThisSession", "")
+    
 

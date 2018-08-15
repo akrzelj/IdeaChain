@@ -46,10 +46,10 @@ bChainServersList = ["127.0.0.5", "ydsds"]
 def AddToBlockChain(data):
     blockChain.append(data)
     
-    
+
 
 def AddToTransactionQueue(data):
-     transactionQueue.append(data)
+    transactionQueue.append(data)
 
 
 def RecTransaction():
