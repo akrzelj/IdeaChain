@@ -106,7 +106,7 @@ def RecTransaction():
 
 
 def InitMe():
-    host = ""       
+    host = ""    
     print(host)                       
     port = 9999
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
