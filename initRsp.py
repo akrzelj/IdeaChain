@@ -4,6 +4,7 @@ import pickle
 bChainServersList = []
 ##fillers for testing
 ##izmjena blockova i transakcija ide na portu 11111
+""""
 bChainServersList.append("127.0.0.5")
 bChainServersList.append("127.0.0.5")
 bChainServersList.append("127.0.0.4")
@@ -11,7 +12,7 @@ bChainServersList.append("127.0.0.2")
 bChainServersList.append("127.0.0.3")
 
 
-
+"""
 class Transaction:
     def __init__(self, creator, idea):
         self.creator = creator

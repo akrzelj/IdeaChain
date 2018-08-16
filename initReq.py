@@ -39,7 +39,7 @@ class Block:
 
 transactionQueue= []
 blockChain = []
-bChainServersList = ["127.0.0.5", "ydsds"]
+bChainServersList = []#["127.0.0.5", "ydsds"]
 
 
 
