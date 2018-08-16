@@ -3,9 +3,12 @@ import json
 import socket
 import pickle
 import subprocess
-##subprocess.Popen("script2.py 1", shell=True)
+import sys
+import os
+import time
 
-class transaction:
+
+class Transaction:
     def __init__(self, creator, idea):
         self.creator = creator
         self.idea = idea
@@ -13,85 +16,49 @@ class transaction:
     def __repr__(self):
         return str("Ideja: " + self.idea + ", autor: " + self.creator + ".\n")
 
-    def find(self, someString):
+    def findEnd(self):
         if(self.creator == "end"):
             return True
         else:
             return False
+    def dataType(self):
+        return "transaction"
 
-class BlockBody:
+
+class Block:
     def __init__(self, transactions, hashPrevBlock):
         self.transactions = transactions
-        self.hashPrev = hashPrev
-
-class BlockHeader:
-    def __init__(self):
+        self.hashPrevBlock = hashPrevBlock
         self.nonce = None
-
-class Block(BlockBody,BlockHeader):
-    def __init__(self, transactions, hashPrevBlock):
-        BlockBody.__init__(self, transactions, hashPrevBlock)
-        BlockHeader.__init__()
+    def dataType(self):
+        return "block"
+    def findEnd(self):
+        if(self.transactions.creator == "end"):
+            return True
+        else:
+            return False
     
 
-ideja = transaction("ante", "Zivot je kratak pojedi batak")
-ideja2 = transaction("ivan", "placi, placi.. manje ces pisati")
+ideja = Transaction("ante", "KOD NAS SVI SE ZOVU ANTE")
+ideja2 = Transaction("ivan", "placi, placi.. manje ces pisati")
 
 transactionQueue = [ideja, ideja2]
 print(transactionQueue)
+blok = Block(ideja, 33333)
 
-def recBlock():
-sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = ""
-port = 41111
-
-
-    # Bind the socket to the port
-    server_address = (host, port)
-    print('starting up on {} port {}'.format(*server_address))
-    sock.bind(server_address)
-
-    # Listen for incoming connections
-    sock.listen(1)
-
-    while True:
-        # Wait for a connection
-        print('waiting for a connection')
-        connection, client_address = sock.accept()
-        try:
-            print('connection from', client_address)
-
-            # Receive the data in small chunks and retransmit it
-            while True:
-                data = connection.recv(1024)
-                data = pickle.loads(data)
-                print('received {!r}'.format(data))
-                break
-            if(data.find("end") == True):
-                break
-            else:
-                #addToBChain(data)
-            
-
-        finally:
-            # Clean up the connection
-            connection.close()
-        if(data.find("end") == True):
-                break
-
-
-def SendSingleTransactionsToMiner(data):
-    # Create a TCP/IP socket
+def SendDataToOneNode(data, ip):
+# Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Connect the socket to the port where the server is listening
-    server_address = ("", 41111)
+    server_address = (ip, 22222)
     print('connecting to {} port {}'.format(*server_address))
     sock.connect(server_address)
 
     try:
 
         # Send data
+        
         message = pickle.dumps(data)#.encode('utf-8')
         print('sending {!r}'.format(message))
         sock.sendall(message)
@@ -101,14 +68,45 @@ def SendSingleTransactionsToMiner(data):
         print('closing socket')
         sock.close()
 
+def SendDataListToOneNode(data, ip):
+    for i in data:
+        SendDataToOneNode(i, ip)
 
-def SendTransactionsToMiner(transactionQueue):
-    for i in transactionQueue:
-        print(i)
-        SendSingleTransactionsToMiner(i)
-    end = transaction("end", "end")
-    SendSingleTransactionsToMiner(end)
 
-SendTransactionsToMiner(transactionQueue)
-RecBlock()
+    
+def SendDataToAllNodes(data):
+    for ip in bChainServerList:
+        SendDataToOneNode(data, ip)
+
+
+def SendDataListToAllNodes(data):
+    for ip in bChainServerList:
+        SendDataToOneNode(data, ip)
+
+
+def PingServer(state):
+    host = ""
+    print(host)                       
+    port = 9999
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((host, port)) 
+    s.sendall(state.encode('ascii'))
+    s.close()
+    time.sleep(5)
+
+    
+
+
+
+def StartMining():
+    os.system('python3 miner.py &')
+    time.sleep(2)
+    SendDataListToOneNode(transactionQueue, "")
+
+def StopMining():
+    pid = os.popen("ps aux | grep miner.py | awk '{print $2}'").readlines()[0] #call pid
+    os.system('kill '+pid) #kill process
+
+
+StopMining()
 

@@ -38,6 +38,22 @@ class Block:
 
 ip = '127.0.0.1'
 
+def RefreshTransactionQueue(block):
+    for i in block.transactions:
+        if(i in transactionQueue):
+            index = transactionQueue.index(i)
+            del transactionQueue[index]
+
+
+def StartMining():
+    os.system('python3 miner.py &')
+    time.sleep(2)
+    SendDataListToOneNode(transactionQueue, "")
+
+def StopMining():
+    pid = os.popen("ps aux | grep miner.py | awk '{print $2}'").readlines()[0] #call pid
+    os.system('kill '+pid) #kill process
+
 def PingServer(state, ip):
     host = ip
     print(host)                       
@@ -169,10 +185,15 @@ def RecTransaction():
                         PingServer("BLOCK", i)
                         SendDataToOneNode(data, i)
                         SendDataToOneNode("endThisSession", i)
-                    for i in 
+                    RefreshTransactionQueue(data)
+                    StartMine()
                 else:
                     print("block nije moj")
+                    StopMining()
                     AddToBlockChain(data)
+                    RefreshTransactionQueue(data)
+                    
+                    
             else:
                 pass          
 
@@ -346,7 +367,7 @@ async def request_handler(client, addr, loop):
 
     elif REQ == "BLOCK":
         RecTransaction()
-        ##kreniMajnatNovi()
+
         
         pass
     else:
