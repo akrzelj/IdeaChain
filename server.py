@@ -140,9 +140,9 @@ def RecTransaction():
     server_address = (host, port)
     print('starting up on {} port {}'.format(*server_address))
     sock.bind(server_address)
-
+    
     # Listen for incoming connections
-    sock.listen(1)
+    sock.listen(10)
 
     while True:
         # Wait for a connection
@@ -217,7 +217,7 @@ def InitRecTransaction():
     sock.bind(server_address)
 
     # Listen for incoming connections
-    sock.listen(1)
+    sock.listen(10)
 
     while True:
         # Wait for a connection
@@ -329,7 +329,7 @@ async def Glavna_funkcija_programa(address, loop):
     ##
     sock = socket(AF_INET, SOCK_STREAM)
     sock.bind(address)
-    sock.listen(1)
+    sock.listen(10)
     sock.setblocking(False)
     
     print(bChainServersList)
