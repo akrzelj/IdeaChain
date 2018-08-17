@@ -1,15 +1,15 @@
 #!/usr/bin/python
 
-
+import time
 import socket
 import pickle
 import sys
+import hashlib
 
 class Transaction:
     def __init__(self, creator, idea):
         self.creator = creator
         self.idea = idea
-
     def __repr__(self):
         return str("Ideja: " + self.idea + ", autor: " + self.creator + ".\n")
 
@@ -24,7 +24,7 @@ class Transaction:
 
 class Block:
     def __init__(self, transactions, hashPrevBlock):
-        self.transactions = transactions
+        self.transactions = [transactions]
         self.hashPrevBlock = hashPrevBlock
         self.nonce = None
     def dataType(self):
@@ -34,10 +34,13 @@ class Block:
             return True
         else:
             return False
-
-transactionQueue= []
-blockChain = []
-
+    def hashIt(self):
+        m = hashlib.new('sha256')
+        m.update(pickle.dumps(self))
+        tmp = m.hexdigest()
+        del m
+        return tmp
+        
 
 
 def AddToBlockChain(data):
@@ -83,11 +86,15 @@ def RecTransaction():
         
             if(data == "endThisSession"):
                 pass
+            elif(type(data) == type("string") and data.find("hash") == 0):
+                data = data.split(",")
+                hashPrevBlock = data[1]
             elif(data.dataType() == "transaction"):
                 AddToTransactionQueue(data)
             elif(data.dataType() == "block"):
                 AddToBlockChain(data)
             else:
+                
                 pass          
 
         finally:
@@ -108,48 +115,47 @@ def mine(transactions, prevHash):
     import random
 
 
-    difficultieLevel = 6
-    targetString = "000000"
-
+    difficultieLevel = 10
+    targetString = "0000000000"
+    noviBlock = Block(transactions, prevHash)
+    noviBlock.nonce = 0
+    guessNumber = 0
 
     flag = 1
-    nonce = random.randrange(0, 500000, 2)
+    nonce = random.randrange(0, 5000000, 2)
     timeStart = time.time()
 
     while(flag):
-        if(True):
-            m = hashlib.new('sha256')
-            m.update((noviBlock).encode("utf-8"))##prvo bi trebali updateat sa tijelom blocka
-            m.update((hashPrevBlock).encode("utf-8"))
-            m.update((str(nonce)).encode("utf-8"))##update sa nonceom
-            print("di pusas")
-            
-            var = m.hexdigest()
+        if(True):            
+            var = noviBlock.hashIt()
             
             hashPartForChacking = var[:difficultieLevel]
-            print(hashPartForChacking)
             
             if(hashPartForChacking == targetString):##hit done
                 flag = 0
-                #zapakiraj nonce u header blocka
-                noviBlock.nonce = nonce
-                
-                sendDataToOneNode(noviBlock, "")
+                print("############################FOUND IT############")
+                time.sleep(1)
+                PingServer("BLOCK")
+                time.sleep(1)
+                SendDataToOneNode(noviBlock, "")
+                time.sleep(1)
+                SendDataToOneNode("endThisSession", "")
+                time.sleep(10)
                 sys.exit("Block is mined... Program is terminating....") ##ugasimo program kad smo izmajnali
                 
             else:                                   ##no hit, continue
                 guessNumber = guessNumber + 1
                 pass
             
-            del m
         nonce = nonce + 1
+        noviBlock.nonce = nonce
 
 def SendDataToOneNode(data, ip):
 # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Connect the socket to the port where the server is listening
-    server_address = (ip, 11111)
+    server_address = (ip, 9898)
     print('connecting to {} port {}'.format(*server_address))
     sock.connect(server_address)
 
@@ -194,6 +200,13 @@ def PingServer(state):
 
 def main():
     RecTransaction()
-    mine()
+    noviBlock = Block(transactionQueue, hashPrevBlock)
+    mine(transactionQueue, hashPrevBlock)
+    
+hashPrevBlock = ""
+transactionQueue= []
+
+
+
 
 main()

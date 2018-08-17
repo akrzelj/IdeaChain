@@ -102,10 +102,10 @@ def PingServer(state, portNum):
 
 #PingServer("TRANS")
 PingServer("OURTRANS", 9999)
-#autor = input("unesire kreatora: ")
-#ideja = input("velika ideja: ")
+autor = input("unesire kreatora: ")
+ideja = input("velika ideja: ")
 #transakcija = Transaction(autor, ideja)
-transakcija = Transaction("a#####################nte", "lupa ANTE")
+transakcija = Transaction(autor, ideja)
 SendDataToOneNode(transakcija, "",11111)
 
 SendDataToOneNode("endThisSession", "", 11111)

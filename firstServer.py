@@ -23,7 +23,7 @@ class Transaction:
 
 class Block:
     def __init__(self, transactions, hashPrevBlock):
-        self.transactions = transactions
+        self.transactions = [transactions]
         self.hashPrevBlock = hashPrevBlock
         self.nonce = None
     def dataType(self):
@@ -43,14 +43,16 @@ def RefreshTransactionQueue(block):
 
 def StartMining():
     os.system('python3 miner.py &')
-    time.sleep(2)
-    SendDataListToOneNode(transactionQueue, "", 9899)
+    time.sleep(3)
+    SendDataListToOneNode(transactionQueue, "", 22222)
+    SendDataToOneNode("hashPrevBlock,"+"44gfsg4ewfw", "", 22222)
+    SendDataToOneNode("endThisSession", "", 22222)
 
 def StopMining():
     try:
         pid = os.popen("ps aux | grep miner.py | awk '{print $2}'").readlines()[0] #call pid
         os.system('kill '+pid) #kill process
-    else:
+    except:
         print("nije se ni minealo")
 
 def PingServer(state, ip):
@@ -148,12 +150,13 @@ def RecTransaction(portNum):
                             SendDataToOneNode(data, i, 9898)
                             SendDataToOneNode("endThisSession", i, 9898)
                     RefreshTransactionQueue(data)
-                    StartMine()
+                    StartMining()
                 else:
                     print("block nije moj")
                     StopMining()
                     AddToBlockChain(data)
-                    RefreshTransactionQueue(data)               
+                    RefreshTransactionQueue(data)
+                    StartMining()
             else:
                 pass          
 
@@ -239,6 +242,7 @@ async def Glavna_funkcija_programa(address, loop):
     ##ovdje bi svi osim prvog prvo trebali skupit cijeli ledger
     #InitMe() ##ve req all ip addr and the whole ledgger
     ##
+    StartMining()
     sock = socket(AF_INET, SOCK_STREAM)
     sock.bind(address)
     sock.listen(10)
@@ -315,7 +319,7 @@ transactionQueue = [ideja, ideja2]
 print(transactionQueue)
 blok = Block(ideja, 33333)
 
-blockChain = [blok]
+blockChain = []
 
 if __name__ == '__main__':
     Main()
