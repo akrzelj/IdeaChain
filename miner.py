@@ -1,113 +1,74 @@
 #!/usr/bin/python
+DEBUG = False
 
 import time
 import socket
 import pickle
 import sys
 import hashlib
+from socket import *
+from BlockChainDataStruct import *
+from DataTransferFuns import *
 
-class Transaction:
-    def __init__(self, creator, idea):
-        self.creator = creator
-        self.idea = idea
-    def __repr__(self):
-        return str("Ideja: " + self.idea + ", autor: " + self.creator + ".\n")
-
-    def findEnd(self):
-        if(self.creator == "end"):
-            return True
-        else:
-            return False
-    def dataType(self):
-        return "transaction"
-
-
-class Block:
-    def __init__(self, transactions, hashPrevBlock):
-        self.transactions = [transactions]
-        self.hashPrevBlock = hashPrevBlock
-        self.nonce = None
-    def dataType(self):
-        return "block"
-    def findEnd(self):
-        if(self.transactions.creator == "end"):
-            return True
-        else:
-            return False
-    def hashIt(self):
-        m = hashlib.new('sha256')
-        m.update(pickle.dumps(self))
-        tmp = m.hexdigest()
-        del m
-        return tmp
-        
-
+m = hashlib.new('sha256')
+m.update(b'bzvz')
+ogledni = m.hexdigest()
 
 def AddToBlockChain(data):
-    blockChain.append(data)
-    
-    
+    blockChain.append(data) 
 
 def AddToTransactionQueue(data):
      transactionQueue.append(data)
 
-
 def RecTransaction():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock = socket(AF_INET, SOCK_STREAM)
     host = ""
     port = 22222
 
 
     # Bind the socket to the port
     server_address = (host, port)
-    print('starting up on {} port {}'.format(*server_address))
+    if(DEBUG):
+        print('starting up on {} port {}'.format(*server_address))
     sock.bind(server_address)
 
     # Listen for incoming connections
-    sock.listen(1)
+    sock.listen(10)
 
     while True:
         # Wait for a connection
-        print('waiting for a connection')
+        if(DEBUG):
+            print('waiting for a connection')
         connection, client_address = sock.accept()
         try:
-            print('connection from', client_address)
+            if(DEBUG):
+                print('connection from', client_address)
 
             while True:
                 data = connection.recv(1024)
-                print("prvo")
-                print(type(data))
                 data = pickle.loads(data)
-                print("drugo")
-                print(type(data))
-                print('received {!r}'.format(data))
+                if(DEBUG):
+                    print('received {!r}'.format(data))
                 break
-           
-        
+
             if(data == "endThisSession"):
                 pass
-            elif(type(data) == type("string") and data.find("hash") == 0):
-                data = data.split(",")
-                hashPrevBlock = data[1]
+            elif(type(data) == type(ogledni)):
+                hashPrevBlock = data
             elif(data.dataType() == "transaction"):
                 AddToTransactionQueue(data)
             elif(data.dataType() == "block"):
                 AddToBlockChain(data)
-            else:
-                
+            else:  
                 pass          
-
         finally:
             # Clean up the connection
             connection.close()
             if(data == "endThisSession"):
                 break
 
-
-
 def addToMiningCandidates(data):
-    miningCandidates.append(data)
-    
+    miningCandidates.append(data) 
 
 def mine(transactions, prevHash):
     import hashlib
@@ -137,7 +98,7 @@ def mine(transactions, prevHash):
                 time.sleep(1)
                 PingServer("BLOCK")
                 time.sleep(1)
-                SendDataToOneNode(noviBlock, "")
+                SendDataToOneNode(noviBlock, "", 9898)
                 time.sleep(1)
                 SendDataToOneNode("endThisSession", "")
                 time.sleep(10)
@@ -150,49 +111,11 @@ def mine(transactions, prevHash):
         nonce = nonce + 1
         noviBlock.nonce = nonce
 
-def SendDataToOneNode(data, ip):
-# Create a TCP/IP socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # Connect the socket to the port where the server is listening
-    server_address = (ip, 9898)
-    print('connecting to {} port {}'.format(*server_address))
-    sock.connect(server_address)
-
-    try:
-
-        # Send data
-        
-        message = pickle.dumps(data)#.encode('utf-8')
-        print('sending {!r}'.format(message))
-        sock.sendall(message)
-
-
-    finally:
-        print('closing socket')
-        sock.close()
-
-def SendDataListToOneNode(data, ip):
-    for i in data:
-        SendDataToOneNode(i, ip)
-
-
-    
-def SendDataToAllNodes(data):
-    for ip in bChainServerList:
-        SendDataToOneNode(data, ip)
-
-
-def SendDataListToAllNodes(data):
-    for ip in bChainServerList:
-        SendDataToOneNode(data, ip)
-
-
 def PingServer(state):
     host = ""
     print(host)                       
     port = 9999
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s = socket(AF_INET, SOCK_STREAM)
     s.connect((host, port)) 
     s.sendall(state.encode('ascii'))
     s.close()
