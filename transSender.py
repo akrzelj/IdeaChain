@@ -51,12 +51,12 @@ transactionQueue = [ideja, ideja2]
 print(transactionQueue)
 blok = Block(ideja, 33333)
 
-def SendDataToOneNode(data, ip):
+def SendDataToOneNode(data, ip, port):
 # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Connect the socket to the port where the server is listening
-    server_address = (ip, 11111)
+    server_address = (ip, port)
     print('connecting to {} port {}'.format(*server_address))
     sock.connect(server_address)
 
@@ -64,7 +64,7 @@ def SendDataToOneNode(data, ip):
 
         # Send data
         
-        message = pickle.dumps(data)#.encode('utf-8')
+        message = pickle.dumps(data)#.('utf-8')
         print('sending {!r}'.format(message))
         sock.sendall(message)
 
@@ -73,37 +73,41 @@ def SendDataToOneNode(data, ip):
         print('closing socket')
         sock.close()
 
-def SendDataListToOneNode(data, ip):
+def SendDataListToOneNode(data, ip, port):
     for i in data:
-        SendDataToOneNode(i, ip)
+        SendDataToOneNode(i, ip, port)
 
 
     
-def SendDataToAllNodes(data):
+def SendDataToAllNodes(data, port):
     for ip in bChainServerList:
-        SendDataToOneNode(data, ip)
+        SendDataToOneNode(data, ip, port)
 
 
-def SendDataListToAllNodes(data):
+def SendDataListToAllNodes(data, port):
     for ip in bChainServerList:
-        SendDataToOneNode(data, ip)
+        SendDataToOneNode(data, ip, port)
 
 
-def PingServer(state):
+def PingServer(state, portNum):
     host = ""
     print(host)                       
-    port = 9999
+    port = portNum
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((host, port)) 
-    s.sendall(state.encode('ascii'))
+    s.sendall(state.encode('latin-1'))
     s.close()
     time.sleep(5)
 
 
-PingServer("TRANS")
+#PingServer("TRANS")
+PingServer("OURTRANS", 9999)
+#autor = input("unesire kreatora: ")
+#ideja = input("velika ideja: ")
+#transakcija = Transaction(autor, ideja)
+transakcija = Transaction("a#####################nte", "lupa kante")
+SendDataToOneNode(transakcija, "",11111)
 
-SendDataListToOneNode(transactionQueue, "")
-
-SendDataToOneNode("endThisSession", "")
+SendDataToOneNode("endThisSession", "", 11111)
     
 

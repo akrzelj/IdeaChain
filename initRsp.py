@@ -1,5 +1,6 @@
 from socket import *
 import pickle
+import time
 
 bChainServersList = []
 ##fillers for testing
@@ -57,7 +58,7 @@ def SendDataToOneNode(data, ip):
     sock = socket(AF_INET, SOCK_STREAM)
 
     print("# Connect the socket to the port where the server is listening")
-    server_address = (ip, 9990)
+    server_address = (ip, 9999)
     print('connecting to {} port {}'.format(*server_address))
     sock.connect(server_address)
 
@@ -66,6 +67,7 @@ def SendDataToOneNode(data, ip):
         # Send data
         message = pickle.dumps(data)#.encode('utf-8')
         print('sending {!r}'.format(message))
+        time.sleep(0.5)
         sock.sendall(message)
 
 
@@ -94,8 +96,10 @@ def initNode():
     sock = socket(AF_INET, SOCK_STREAM)
     sock.bind(('',9999))
     sock.listen(1)
+    
 
     client, address = sock.accept()
+    print("######################### dosao je... prvo client pa address")
     print(client)
     print(address)
 
