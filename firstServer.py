@@ -47,8 +47,11 @@ def StartMining():
     SendDataListToOneNode(transactionQueue, "", 9899)
 
 def StopMining():
-    pid = os.popen("ps aux | grep miner.py | awk '{print $2}'").readlines()[0] #call pid
-    os.system('kill '+pid) #kill process
+    try:
+        pid = os.popen("ps aux | grep miner.py | awk '{print $2}'").readlines()[0] #call pid
+        os.system('kill '+pid) #kill process
+    else:
+        print("nije se ni minealo")
 
 def PingServer(state, ip):
     host = ip
@@ -312,7 +315,7 @@ transactionQueue = [ideja, ideja2]
 print(transactionQueue)
 blok = Block(ideja, 33333)
 
-blockChain = []
+blockChain = [blok]
 
 if __name__ == '__main__':
     Main()
