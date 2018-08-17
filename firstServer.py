@@ -59,7 +59,7 @@ def PingServer(state, ip):
     time.sleep(0.5)
     s.sendall(state.encode('latin-1').strip())
     s.close()
-    time.sleep(5)
+    time.sleep(3)
 
 def CheckReq(data): #helper for handling incomming REQs
     tmp = list(data.split(","))
@@ -125,7 +125,7 @@ def RecTransaction(portNum):
                             time.sleep(1)
                             print("------------------pingam")
                             PingServer("TRANS", i)
-                            time.sleep(5)
+                            time.sleep(1)
                             print("-----------------saljem")
                             SendDataToOneNode(data, i, 9898)
                             time.sleep(1)

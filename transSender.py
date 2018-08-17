@@ -105,7 +105,7 @@ PingServer("OURTRANS", 9999)
 #autor = input("unesire kreatora: ")
 #ideja = input("velika ideja: ")
 #transakcija = Transaction(autor, ideja)
-transakcija = Transaction("a#####################nte", "lupa kante")
+transakcija = Transaction("a#####################nte", "lupa ANTE")
 SendDataToOneNode(transakcija, "",11111)
 
 SendDataToOneNode("endThisSession", "", 11111)
