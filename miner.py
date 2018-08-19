@@ -58,11 +58,6 @@ def addToMiningCandidates(data):
     miningCandidates.append(data) 
 
 def mine(transactions, prevHash):
-    import hashlib
-    import time
-    import random
-
-
     difficultieLevel = 7
     targetString = "0000000"
     noviBlock = Block(transactions, prevHash)
