@@ -30,11 +30,6 @@ class Block:
         print("#####################################################")
     def dataType(self):
         return "block"
-    def findEnd(self):
-        if(self.transactions.creator == "end"):
-            return True
-        else:
-            return False
     def hashIt(self):
         m = hashlib.new('sha256')
         m.update(pickle.dumps(self))
