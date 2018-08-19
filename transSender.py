@@ -16,9 +16,10 @@ def PingServer(state, portNum):
     time.sleep(5)
 
 while True:
+    tmp = input("Press any key")
     PingServer("OURTRANS", 9999)
-    autor = input("unesire kreatora: ")
-    ideja = input("velika ideja: ")
+    autor = input("Creator: ")
+    ideja = input("Your idea: ")
     transakcija = Transaction(autor, ideja)
     if(autor != "0"):
         SendDataToOneNode(transakcija, "",11111)

@@ -1,5 +1,4 @@
 #!/usr/bin/python
-DEBUG = False
 
 import time
 import socket
@@ -9,10 +8,6 @@ import hashlib
 from socket import *
 from BlockChainDataStruct import *
 from DataTransferFuns import *
-
-m = hashlib.new('sha256')
-m.update(b'bzvz')
-ogledni = m.hexdigest()
 
 def AddToBlockChain(data):
     blockChain.append(data) 
@@ -25,11 +20,8 @@ def RecTransaction():
     host = ""
     port = 22222
 
-
     # Bind the socket to the port
     server_address = (host, port)
-    if(DEBUG):
-        print('starting up on {} port {}'.format(*server_address))
     sock.bind(server_address)
 
     # Listen for incoming connections
@@ -37,23 +29,18 @@ def RecTransaction():
 
     while True:
         # Wait for a connection
-        if(DEBUG):
-            print('waiting for a connection')
+
         connection, client_address = sock.accept()
         try:
-            if(DEBUG):
-                print('connection from', client_address)
-
             while True:
                 data = connection.recv(1024)
                 data = pickle.loads(data)
-                if(DEBUG):
-                    print('received {!r}'.format(data))
                 break
 
             if(data == "endThisSession"):
                 pass
-            elif(type(data) == type(ogledni)):
+            elif(type(data) == type("string")):
+                global hashPrevBlock
                 hashPrevBlock = data
             elif(data.dataType() == "transaction"):
                 AddToTransactionQueue(data)
@@ -76,8 +63,8 @@ def mine(transactions, prevHash):
     import random
 
 
-    difficultieLevel = 10
-    targetString = "0000000000"
+    difficultieLevel = 7
+    targetString = "0000000"
     noviBlock = Block(transactions, prevHash)
     noviBlock.nonce = 0
     guessNumber = 0
@@ -94,15 +81,14 @@ def mine(transactions, prevHash):
             
             if(hashPartForChacking == targetString):##hit done
                 flag = 0
-                print("############################FOUND IT############")
                 time.sleep(1)
                 PingServer("BLOCK")
                 time.sleep(1)
                 SendDataToOneNode(noviBlock, "", 9898)
                 time.sleep(1)
-                SendDataToOneNode("endThisSession", "")
+                SendDataToOneNode("endThisSession", "", 9898)
                 time.sleep(10)
-                sys.exit("Block is mined... Program is terminating....") ##ugasimo program kad smo izmajnali
+                sys.exit("Block is mined... Program is terminating....")
                 
             else:                                   ##no hit, continue
                 guessNumber = guessNumber + 1
@@ -123,13 +109,9 @@ def PingServer(state):
 
 def main():
     RecTransaction()
-    noviBlock = Block(transactionQueue, hashPrevBlock)
     mine(transactionQueue, hashPrevBlock)
     
 hashPrevBlock = ""
 transactionQueue= []
-
-
-
 
 main()
