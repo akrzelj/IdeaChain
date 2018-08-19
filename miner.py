@@ -8,6 +8,7 @@ import hashlib
 from socket import *
 from BlockChainDataStruct import *
 from DataTransferFuns import *
+import random
 
 def AddToBlockChain(data):
     blockChain.append(data) 
@@ -58,8 +59,8 @@ def addToMiningCandidates(data):
     miningCandidates.append(data) 
 
 def mine(transactions, prevHash):
-    difficultieLevel = 7
-    targetString = "0000000"
+    difficultieLevel = 6
+    targetString = "000000"
     noviBlock = Block(transactions, prevHash)
     noviBlock.nonce = 0
     guessNumber = 0

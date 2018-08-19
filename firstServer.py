@@ -9,8 +9,8 @@ import os
 from BlockChainDataStruct import *
 from DataTransferFuns import *
 
-difficultieLevel = 7
-targetString = "0000000"
+difficultieLevel = 6
+targetString = "000000"
 
 def ValidateBlock(block):
     if(block.hashPrevBlock == blockChain[-1].hashIt()):

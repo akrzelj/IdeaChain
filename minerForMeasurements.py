@@ -20,12 +20,15 @@ def mine(transactions, prevHash):
     import random
 
 
-    difficultieLevel = 1
-    targetString = "0"
+    difficultieLevel = 7
+    targetString = "0000000"
     noviBlock = Block(transactions, prevHash)
 
-    for i in range(15):
-        for j in range(5):
+    for i in range(6):
+        print("#")
+        print("razina tezine " + str(difficultieLevel))
+        print("#")
+        for j in range(3):
             noviBlock.nonce = 0
             guessNumber = 0
 
@@ -43,9 +46,8 @@ def mine(transactions, prevHash):
                         flag = 0
                         timerEnd = time.time()
                         miningTime = timerEnd - timerStart
-                        print("Block je majnan nakon \t" + str(miningTime) + " sekunti, na razini težine \t" + str(difficultieLevel))
-                        print("#")
-                        print("#")
+                        print(miningTime)
+
                         
                     else:                                   ##no hit, continue
                         guessNumber = guessNumber + 1
