@@ -5,13 +5,10 @@ import socket
 import pickle
 import sys
 import hashlib
-from socket import *
+import socket
 from BlockChainDataStruct import *
 from DataTransferFuns import *
 import random
-
-def AddToBlockChain(data):
-    blockChain.append(data) 
 
 def AddToTransactionQueue(data):
      transactionQueue.append(data)
@@ -45,8 +42,6 @@ def RecTransaction():
                 hashPrevBlock = data
             elif(data.dataType() == "transaction"):
                 AddToTransactionQueue(data)
-            elif(data.dataType() == "block"):
-                AddToBlockChain(data)
             else:  
                 pass          
         finally:
@@ -55,19 +50,16 @@ def RecTransaction():
             if(data == "endThisSession"):
                 break
 
-def addToMiningCandidates(data):
-    miningCandidates.append(data) 
 
 def mine(transactions, prevHash):
     difficultieLevel = 6
-    targetString = "000000"
+    targetString = "0"*difficultieLevel
     noviBlock = Block(transactions, prevHash)
     noviBlock.nonce = 0
     guessNumber = 0
 
     flag = 1
     nonce = random.randrange(0, 5000000, 2)
-    timeStart = time.time()
 
     while(flag):
         if(True):            
@@ -84,7 +76,7 @@ def mine(transactions, prevHash):
                 time.sleep(1)
                 SendDataToOneNode("endThisSession", "", 9898)
                 time.sleep(10)
-                sys.exit("Block is mined... Program is terminating....")
+                sys.exit("")
                 
             else:                                   ##no hit, continue
                 guessNumber = guessNumber + 1
@@ -94,8 +86,7 @@ def mine(transactions, prevHash):
         noviBlock.nonce = nonce
 
 def PingServer(state):
-    host = ""
-    print(host)                       
+    host = ""                     
     port = 9999
     s = socket(AF_INET, SOCK_STREAM)
     s.connect((host, port)) 
@@ -107,6 +98,7 @@ def main():
     RecTransaction()
     mine(transactionQueue, hashPrevBlock)
     
+
 hashPrevBlock = ""
 transactionQueue= []
 

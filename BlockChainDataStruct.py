@@ -32,7 +32,9 @@ class Block:
         return "block"
     def hashIt(self):
         m = hashlib.new('sha256')
-        m.update(pickle.dumps(self))
+        m.update(pickle.dumps(self.nonce))
+        m.update(pickle.dumps(self.hashPrevBlock))
+        m.update(pickle.dumps(self.transactions))
         tmp = m.hexdigest()
         del m
         return tmp

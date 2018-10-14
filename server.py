@@ -1,18 +1,28 @@
 #!/usr/bin/python
+FIRST_SERVER = True #only the first server on the blockchain has FIRST_SERVER == True
+INIT_ONGOING = True
 
-
-from socket import *
 import asyncio
 import pickle
 import time
 import os
 from BlockChainDataStruct import *
 from DataTransferFuns import *
+from socket import *
+import pickle
+import datetime
 
-difficultieLevel = 7
-targetString = "0000000"
+def timestamp():
+    now = datetime.datetime.now()
+    print ("Current date and time : ")
+    print (now.strftime("%Y-%m-%d %H:%M:%S"))
+
+difficultieLevel = 6
+targetString = "0" * difficultieLevel
 
 def ValidateBlock(block):
+    if(INIT_ONGOING):
+        return True
     if(block.hashPrevBlock == blockChain[-1].hashIt()):
         tmp = block.hashIt()
         tmp = tmp[:difficultieLevel]
@@ -46,11 +56,9 @@ def StopMining():
         print("miner was not active")
 
 def PingServer(state, ip):
-    host = ip
-    print(host)                       
     port = 9999
     s = socket(AF_INET, SOCK_STREAM)
-    s.connect((host, port))
+    s.connect((ip, port))
     time.sleep(0.5)
     s.sendall(state.encode('latin-1').strip())
     s.close()
@@ -98,38 +106,54 @@ def RecTransaction(portNum):
                 data = connection.recv(1024)
                 data = pickle.loads(data)
                 break
-        
+            if(type(data) == type([])):
+                print("primam listu servera")
+                for i in data:
+                    bChainServersList.append(i)
             if(data == "endThisSession"):
                 pass
             elif(data.dataType() == "transaction"):
 
                 if(client_address[0] == '127.0.0.1'):
                     print("my transaction")
+                    timestamp()
+                    print(data)
                     AddToTransactionQueue(data)
-                    for i in bChainServersList:
-                        if(i != '127.0.0.1'):
-                            time.sleep(1)
-                            PingServer("TRANS", i)
-                            time.sleep(1)
-                            SendDataToOneNode(data, i, 9898)
-                            time.sleep(1)
-                            SendDataToOneNode("endThisSession", i, 9898)
+                    if(bChainServersList):
+                        print("Sending to all other nodes")
+                        print("svi drugi:")
+                        print(bChainServersList)
+                        for i in bChainServersList:
+                            if(i != '127.0.0.1'):
+                                time.sleep(1)
+                                PingServer("TRANS", i)
+                                time.sleep(1)
+                                SendDataToOneNode(data, i, 9898)
+                                time.sleep(1)
+                                SendDataToOneNode("endThisSession", i, 9898)
                 else:
                     print("not my transaction")
+                    timestamp()
+                    print(data)
                     AddToTransactionQueue(data)
             elif(data.dataType() == "block"):
                 if(ValidateBlock(data) == True):
                     if(client_address[0] == '127.0.0.1'):
                         print("my block")
                         AddToBlockChain(data)
-                        ##posalji svima ostalima
-                        for i in bChainServersList:
-                            if(i != '127.0.0.1'):
-                                PingServer("BLOCK", i)
-                                SendDataToOneNode(data, i, 9898)
-                                SendDataToOneNode("endThisSession", i, 9898)
+                        if(bChainServersList):
+                            print("sending to all other nodes this block:")
+                            timestamp()
+                            data.display()
+                            for i in bChainServersList:
+                                if(i != '127.0.0.1'):
+                                    PingServer("BLOCK", i)
+                                    SendDataToOneNode(data, i, 9898)
+                                    SendDataToOneNode("endThisSession", i, 9898)
                     else:
                         print("not my block")
+                        timestamp()
+                        data.display()
                         StopMining()
                         AddToBlockChain(data)
                     RefreshTransactionQueue(data)
@@ -144,38 +168,44 @@ def RecTransaction(portNum):
             connection.close()
             if(data == "endThisSession"):
                 break
+    sock.close()
 
 def InitMe():
-    host = str(input("Enter ip addr of one node on the p2p blockchain network"))                     
-    port = 9999
-    s = socket(AF_INET, SOCK_STREAM)
-    s.connect((host, port))
-    s.sendall("INIT".encode('latin-1').strip())
-    s.close()
+    ip = str(input("Enter ip addr of one node on the p2p blockchain network: "))
+    bChainServersList.append(ip)
+    PingServer("INIT", ip)
     RecTransaction(9898)
 
 
 def AddNewNodeToBChain(addr, loop):##
     print("AddNewNodeToBChain\n")
+    
+    if(addr[0] != '127.0.0.1'):
+        SendDataListToOneNode(blockChain, addr[0], 9898)##send whole ledger to new node
+        SendDataListToOneNode(transactionQueue, addr[0], 9898)
+        if addr[0] in bChainServersList:
+            bChainServersList.remove(addr[0])
+        SendDataListToOneNode(bChainServersList, addr[0], 9898)##send all bchain members to new node
+        SendDataToAllNodes("NEW,"+addr[0], 9898, bChainServersList) ##send new memeber to all nodes on network
     if(addr[0] not in bChainServersList):
-        if(addr[0] != '127.0.0.1'):
-            SendDataListToOneNode(blockChain, addr[0], 9898)##send whole ledger to new node
-            SendDataListToOneNode(transactionQueue, addr[0], 9898)
-            SendDataListToOneNode(bChainServersList, addr[0], 9898)##send all bchain members to new node
-            SendDataToAllNodes("NEW,"+addr[0], 9898) ##send new memeber to all nodes on network
-    bChainServersList.append(addr[0])
+        bChainServersList.append(addr[0])
     SendDataToOneNode("endThisSession",addr[0], 9898)
-    print("KRAJ AddNewNodeToBChain\n")
     return
 
 async def Glavna_funkcija_programa(address, loop):
     ##
     ##only the first server does not require initilization
-    InitMe() ##ve req all ip addr and the whole ledgger
-    ##
-    ##StartMining() at this place has only the firs server
-    #StartMining()
-    ##
+    if(not FIRST_SERVER):
+        InitMe() ##receive req all ip addr and the whole ledgger
+        print("Init done...")
+        print("transaction queue: ")
+        print(transactionQueue)
+        print("ledger: ")
+        for i in blockChain:
+            i.display()
+    INIT_ONGOING = False
+    if(FIRST_SERVER):
+        StartMining()
     sock = socket(AF_INET, SOCK_STREAM)
     sock.bind(address)
     sock.listen(10)
@@ -190,38 +220,35 @@ async def Glavna_funkcija_programa(address, loop):
 
 async def request_handler(client, addr, loop):
     global data
-    print("request handler")
     data = await loop.sock_recv(client, 1024)
     data = data.decode()
     (REQ, data) = CheckReq(data)
 
     if REQ == "INIT":
-        print("#########usao sam u INIT")
+        #print("#########usao sam u INIT")
         time.sleep(2)
         AddNewNodeToBChain(addr, loop)  
     elif REQ == "NEW":
-        print("#########usao sam u NEW")
+        #print("#########usao sam u NEW")
         time.sleep(2)
         bChainServersList.append(data)
         pass
     elif REQ == "TRANS":
-        print("#########usao sam u TRANS")
+        #print("#########usao sam u TRANS")
         RecTransaction(9898)
         
     elif REQ == "OURTRANS":
-        print("#########usao sam u OURTRANS")
+        #print("#########usao sam u OURTRANS")
         RecTransaction(11111)
     elif REQ == "BLOCK":
-        print("#########usao sam u BLOCK")
+       # print("#########usao sam u BLOCK")
         RecTransaction(9898)
     else:
         pass
-    print(transactionQueue)
-    for block in blockChain:
-        block.display()
+
     
     client.close()
-    print("ready...")
+    #print("ready...")
 
 def RecsieverMainFunction():
     loop = asyncio.get_event_loop()
@@ -233,12 +260,25 @@ def RecsieverMainFunction():
     server.close()
 
 def Main():
+    for i in blockChain:
+        i.display()
     RecsieverMainFunction()
 
-bChainServersList = []
-transactionQueue = []
-blockChain = []
-
+if(FIRST_SERVER):
+    bChainServersList = []
+    ideja = Transaction("Mudar covjek", "Gread idea")
+    ideja2 = Transaction("Wise man", "big great idea")
+    transactionQueue = [ideja, ideja2]
+    blok1 = Block([ideja,ideja2], 33333)
+    blok1.nonce = 5
+    blok2 = Block([ideja,ideja2], blok1.hashIt())
+    blok2.nonce = 30
+    blockChain = [blok1, blok2]
+    RefreshTransactionQueue(blok2)
+else:
+    bChainServersList = []
+    transactionQueue = []
+    blockChain = []
 
 if __name__ == '__main__':
     Main()
