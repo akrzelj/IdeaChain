@@ -27,7 +27,7 @@ while True:
     else:
         SendDataToOneNode("endThisSession", "", 11111)
         break
-    print("\n\n")
+    print("\n\n\n")
     time.sleep(10)
     
 
